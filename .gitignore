@@ -1,0 +1,8 @@
+/.vs
+/bin
+/bin-int
+
+**.exe
+**.bat
+**.sln
+**.vcxproj.user
