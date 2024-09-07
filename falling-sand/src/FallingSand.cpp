@@ -1,6 +1,9 @@
 // vendor
 #include "gtc/matrix_transform.hpp"
 
+// std
+#include <format>
+
 // src
 #include "FallingSand.hpp"
 #include "InputHandler.hpp"
@@ -21,7 +24,7 @@ int FallingSand::Init()
 	int w, h;
 	glfwGetFramebufferSize(this->window_handle, &w, &h);
 
-	const int CELL_SIZE = 4;
+	const int CELL_SIZE = 1;
 	this->grid.cell_size = CELL_SIZE;
 	this->grid.nof_cols = w / CELL_SIZE;
 	this->grid.nof_rows = h / CELL_SIZE;
@@ -52,8 +55,11 @@ int FallingSand::Init()
 	return 0;
 }
 
-int FallingSand::Tick() {
+int FallingSand::Tick(const double dt) {
 	static int NOF_QUADS_TO_DRAW = this->grid.nof_cols * this->grid.nof_rows;
+
+	const double fps = 1.0 / dt;
+	glfwSetWindowTitle(this->window_handle, std::format("dt={:.2f} ms, fps={:.0f}, nCells={}", dt * 1000.0, fps, this->grid.cells.size()).c_str());
 
 	if (InputHandler::ButtonPressed(GLFW_MOUSE_BUTTON_LEFT)) {
 		const glm::vec2 cursorPos = InputHandler::GetLatestCursorPosition();
@@ -86,7 +92,6 @@ int FallingSand::Tick() {
 	}
 
 	this->grid.Update(this->quadRenderer->GetMappedBuffer());
-
 	this->quadRenderer->DrawQuads(NOF_QUADS_TO_DRAW, this->grid.cell_size);
 
 	return 0;

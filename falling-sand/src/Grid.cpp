@@ -20,11 +20,6 @@ void Grid::Update(float* buffer)
         // Cell already on the floor.
         if (row == nof_rows - 1) {
             future.insert(cell);
-            /*
-            buffer[cell + 2] = 1.0f;
-            buffer[cell + 3] = 1.0f;
-            buffer[cell + 4] = 1.0f;
-            */
             continue;
         }
 
@@ -51,11 +46,6 @@ void Grid::Update(float* buffer)
         // Can't move left or right either => Stay put.
         if (col + dir < 0 || col + dir >= nof_cols) {
             future.insert(cell);
-            /*
-            buffer[cell + 2] = 1.0f;
-            buffer[cell + 3] = 1.0f;
-            buffer[cell + 4] = 1.0f;
-            */
             continue;
         }
 
@@ -76,11 +66,6 @@ void Grid::Update(float* buffer)
 
         // No movement.
         future.insert(cell);
-        /*
-        buffer[cell + 2] = 1.0f;
-        buffer[cell + 3] = 1.0f;
-        buffer[cell + 4] = 1.0f;
-        */
 
     }
 

@@ -13,7 +13,7 @@ public:
     FallingSand() = default;
 
     int Init() override;
-    int Tick() override;
+    int Tick(const double dt) override;
     void Destroy() override;
 
 private:

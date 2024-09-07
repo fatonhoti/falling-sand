@@ -1,6 +1,10 @@
 #include "Application.hpp"
 
+// std
 #include <iostream>
+#include <format>
+
+// src
 #include "InputHandler.hpp"
 
 void Application::Start()
@@ -14,13 +18,16 @@ void Application::Start()
 
     while (!glfwWindowShouldClose(this->window.handle))
     {
-        glfwPollEvents();
-        int error = app_instance->Tick();
+        const double dt = this->GetDeltatime();
+
+        int error = app_instance->Tick(dt);
         if (error) {
             std::cout << "[APPLICATION][START][ERROR] Application instanced returned error. Exiting gracefully\n";
             break;
         }
+
         glfwSwapBuffers(this->window.handle);
+        glfwPollEvents();
     }
 
 }
@@ -98,6 +105,9 @@ int Application::InitGLFW(const int window_width, const int window_height, const
     }
     glfwMakeContextCurrent(this->window.handle);
 
+    // Disable vsync (we want our transistors to go brrrrrrrrrrrrrrrrrrrrrr)
+    glfwSwapInterval(0);
+
     // From documentation: https://www.glfw.org/docs/latest/input_guide.html
     glfwSetFramebufferSizeCallback(this->window.handle, framebuffer_size_callback);
     glfwSetKeyCallback(this->window.handle, key_callback);
@@ -124,6 +134,19 @@ int Application::InitGLAD()
 
     return 0;
 
+}
+
+double Application::GetDeltatime()
+{
+    static double lastTime = 0;
+    static int frame = 0;
+    static double fps = 0;
+
+    double currentTime = glfwGetTime();
+    double delta = currentTime - lastTime;
+    lastTime = currentTime;
+
+    return delta;
 }
 
 void Application::Destroy()
