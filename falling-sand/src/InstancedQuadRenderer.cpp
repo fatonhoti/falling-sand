@@ -5,12 +5,15 @@ InstancedQuadRenderer::InstancedQuadRenderer(const int max_nof_cells) {
 }
 
 InstancedQuadRenderer::~InstancedQuadRenderer() {
-    if (mappedBuffer) {
-        glUnmapBuffer(this->instancedQuadPosition_vbo);
-    }
     glDeleteBuffers(1, &this->quadVertices_vbo);
     glDeleteBuffers(1, &this->quadVertices_ebo);
+
     glDeleteBuffers(1, &this->instancedQuadPosition_vbo);
+    glDeleteBuffers(1, &this->instancedQuadColor_vbo);
+    if (persistentlyMappedColorBuffer) {
+        glUnmapBuffer(this->instancedQuadPosition_vbo);
+    }
+
     glDeleteVertexArrays(1, &vao);
 }
 
@@ -25,6 +28,7 @@ void InstancedQuadRenderer::DrawQuads(const int nof_quads, const int quad_size)
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, nof_quads);
 }
 
+
 void InstancedQuadRenderer::SetProjectionMatrix(const glm::mat4& pm)
 {
     this->projectionMatrix = pm;
@@ -32,28 +36,26 @@ void InstancedQuadRenderer::SetProjectionMatrix(const glm::mat4& pm)
 
 void InstancedQuadRenderer::SetCell(const int idx, const glm::vec3 color)
 {
-    float* buffer = static_cast<float*>(mappedBuffer);
-    buffer[idx + 2] = color.r;
-    buffer[idx + 3] = color.g;
-    buffer[idx + 4] = color.b;
+    float* buffer = static_cast<float*>(persistentlyMappedColorBuffer);
+    buffer[idx    ] = color.r;
+    buffer[idx + 1] = color.g;
+    buffer[idx + 2] = color.b;
 }
 
-void InstancedQuadRenderer::ResetCell(const int idx)
+void InstancedQuadRenderer::SetPositionBuffer(const float* buffer, const size_t size)
 {
-    float* buffer = static_cast<float*>(mappedBuffer);
-    buffer[idx + 2] = 0.0f;
-    buffer[idx + 3] = 0.0f;
-    buffer[idx + 4] = 0.0f;
+    glBindBuffer(GL_ARRAY_BUFFER, this->instancedQuadPosition_vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, size, buffer);
 }
 
-float* InstancedQuadRenderer::GetMappedBuffer()
+float* InstancedQuadRenderer::GetMappedColorBuffer()
 {
-    return static_cast<float*>(mappedBuffer);
+    return static_cast<float*>(persistentlyMappedColorBuffer);
 }
 
-void InstancedQuadRenderer::SetBuffer(const float* buffer, const size_t size)
+void InstancedQuadRenderer::SetColorBuffer(const float* buffer, const size_t size)
 {
-    memcpy(mappedBuffer, buffer, size);
+    memcpy(persistentlyMappedColorBuffer, buffer, size);
 }
 
 void InstancedQuadRenderer::InitRenderData(const int max_nof_cells) {
@@ -84,27 +86,34 @@ void InstancedQuadRenderer::InitRenderData(const int max_nof_cells) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->quadVertices_ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Position and color attribute (per instance)
+    // #################################
+    // Position attribute (per instance)
+    // #################################
+    const int NOF_FLOATS_PER_POSITION = 2;
+    const int BYTES_PER_POSITION = NOF_FLOATS_PER_POSITION * sizeof(float);
+    const int BYTES_ALL_POSITIONS = max_nof_cells * BYTES_PER_POSITION;
+
     glGenBuffers(1, &this->instancedQuadPosition_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, this->instancedQuadPosition_vbo);
-
-    const int NOF_FLOATS_PER_POSITION = 2;
-    const int NOF_FLOATS_PER_COLOR = 3;
-    const int BYTES_PER_CELL = NOF_FLOATS_PER_POSITION * NOF_FLOATS_PER_COLOR * sizeof(float);
-    const int BYTES_ALL_CELLS = max_nof_cells * BYTES_PER_CELL;
-
-    const auto flags = GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_WRITE_BIT;
-    glBufferStorage(GL_ARRAY_BUFFER, BYTES_ALL_CELLS, NULL, flags);
-    mappedBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, BYTES_ALL_CELLS, flags);
-
-    // Position (technically useless, but kept here in case I wanna rework into particle system)
+    glBufferData(GL_ARRAY_BUFFER, BYTES_ALL_POSITIONS, NULL, GL_STATIC_DRAW);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, NOF_FLOATS_PER_POSITION, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, NOF_FLOATS_PER_POSITION, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (const void*)0);
     glVertexAttribDivisor(1, 1); // Update once per instance
 
-    // Color
+    // ##############################
+    // Color attribute (per instance)
+    // ##############################
+    const int NOF_FLOATS_PER_COLOR = 3;
+    const int BYTES_PER_COLOR = NOF_FLOATS_PER_COLOR * sizeof(float);
+    const int BYTES_ALL_COLORS = max_nof_cells * BYTES_PER_COLOR;
+    const auto flags = GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_WRITE_BIT;
+
+    glGenBuffers(1, &this->instancedQuadColor_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, this->instancedQuadColor_vbo);
+    glBufferStorage(GL_ARRAY_BUFFER, BYTES_ALL_COLORS, NULL, flags);
+    persistentlyMappedColorBuffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, BYTES_ALL_COLORS, flags);
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, NOF_FLOATS_PER_COLOR, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(NOF_FLOATS_PER_POSITION * sizeof(float)));
+    glVertexAttribPointer(2, NOF_FLOATS_PER_COLOR, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (const void*)(0));
     glVertexAttribDivisor(2, 1); // Update once per instance
 
 }
