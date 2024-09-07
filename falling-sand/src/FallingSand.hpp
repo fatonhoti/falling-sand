@@ -6,7 +6,6 @@
 // src
 #include "AppInstance.hpp"
 #include "Grid.hpp"
-#include "InstancedQuadRenderer.hpp"
 
 class FallingSand : public AppInstance {
 public:
@@ -18,5 +17,4 @@ public:
 
 private:
     Grid grid;
-    std::unique_ptr<InstancedQuadRenderer> quadRenderer{ nullptr };
 };

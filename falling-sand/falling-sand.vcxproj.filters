@@ -30,10 +30,10 @@
     <ClInclude Include="src\FallingSand.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\InstancedQuadRenderer.hpp">
+    <ClInclude Include="src\Grid.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Grid.hpp">
+    <ClInclude Include="src\ComputeShader.hpp">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,11 +56,12 @@
     <ClCompile Include="vendor\glad\src\glad.c">
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\InstancedQuadRenderer.cpp" />
     <ClCompile Include="src\Grid.cpp" />
+    <ClCompile Include="src\ComputeShader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\instancedQuad.frag" />
-    <None Include="src\shaders\instancedQuad.vert" />
+    <None Include="src\shaders\grid_update.comp" />
+    <None Include="src\shaders\fsq.vert" />
+    <None Include="src\shaders\fsq.frag" />
   </ItemGroup>
 </Project>

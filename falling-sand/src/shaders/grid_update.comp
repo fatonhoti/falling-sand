@@ -1,0 +1,94 @@
+#version 460
+
+layout(local_size_x = 1, local_size_y = 1) in;
+
+layout(binding = 0, rgba32f) uniform image2D currentState;
+layout(binding = 1, rgba32f) uniform image2D nextState;
+
+uniform int nof_cols; // Number of columns in the grid
+uniform int nof_rows; // Number of rows in the grid
+uniform int cell_size; // Size of each cell
+
+ivec2 flip_y_coord(ivec2 coord) {
+    coord.y = (nof_rows - 1) - coord.y;
+    return coord;
+}
+
+bool isEqual(const float a, const float b) {
+    float epsilon = 0.001; // Define an appropriate epsilon value
+    return abs(a - b) < epsilon;
+}
+
+void setPixel(ivec2 topleft, vec4 color) {
+    for (int y = 0; y < cell_size; ++y)
+        for (int x = 0; x < cell_size; ++x)
+            imageStore(nextState, topleft + ivec2(x, -y), color);
+    return;
+}
+
+void main() {
+    ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 topLeftPixel = flip_y_coord(pixelCoord) * cell_size;
+    topLeftPixel.y += (cell_size - 1);
+
+    vec4 currentColor = imageLoad(currentState, topLeftPixel);
+
+    // Skip empty cells
+    if (isEqual(currentColor.r, 0.0f) && isEqual(currentColor.g, 0.0f) && isEqual(currentColor.b, 0.0f)) {
+        return;
+    }
+
+    // Check if the cell is on the bottom row
+    if (topLeftPixel.y - (cell_size - 1) < cell_size) {
+        // Keep the cell at the bottom
+        setPixel(topLeftPixel, currentColor);
+        return;
+    }
+
+    // ------------------------------------------------------------------------------------
+    // NOTE: ivec(0, -1) used because OpenGL has (0, 0) in bottom left => Y grows upwards,
+    // but I am expecting (0, 0) to be top left => Y grows downwards.
+    // ------------------------------------------------------------------------------------
+
+    // Try to move the cell down
+    ivec2 southTopLeftPixel = topLeftPixel + cell_size * ivec2(0, -1);
+    vec4 southColor = imageLoad(currentState, southTopLeftPixel);
+
+    if (isEqual(southColor.r, 0.0f) && isEqual(southColor.g, 0.0f) && isEqual(southColor.b, 0.0f)) {
+        // Move down
+        for (int y = 0; y < cell_size; ++y) {
+            for (int x = 0; x < cell_size; ++x) {
+                imageStore(nextState, southTopLeftPixel + ivec2(x, -y), currentColor);
+                imageStore(nextState, topLeftPixel + ivec2(x, -y), vec4(0.0));
+            }
+        }
+        return;
+    }
+
+    // Couldn't move down, try to move left or right
+    int dir = (int(mod(float(gl_GlobalInvocationID.x + gl_GlobalInvocationID.y), 2.0)) * 2) - 1; // Randomly choose -1 or 1
+    ivec2 lateralTopLeftPixel = topLeftPixel + cell_size * ivec2(dir, -1);
+
+    // Ensure movement is within bounds
+    if (lateralTopLeftPixel.x >= 0 && (lateralTopLeftPixel.x + (cell_size - 1)) < (nof_cols * cell_size)) {
+        vec4 lateralColor = imageLoad(currentState, lateralTopLeftPixel);
+
+        if (isEqual(lateralColor.r, 0.0f) && isEqual(lateralColor.g, 0.0f) && isEqual(lateralColor.b, 0.0f)) {
+            // Move laterally
+            for (int y = 0; y < cell_size; ++y) {
+                for (int x = 0; x < cell_size; ++x) {
+                    imageStore(nextState, lateralTopLeftPixel + ivec2(x, -y), currentColor);
+                    imageStore(nextState, topLeftPixel + ivec2(x, -y), vec4(0.0));
+                }
+            }
+            return;
+        }
+    }
+
+    // No movement possible, stay in place
+    for (int y = 0; y < cell_size; ++y) {
+        for (int x = 0; x < cell_size; ++x) {
+            imageStore(nextState, topLeftPixel + ivec2(x, -y), currentColor);
+        }
+    }
+}

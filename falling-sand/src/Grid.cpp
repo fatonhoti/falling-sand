@@ -1,72 +1,92 @@
 #include "Grid.hpp"
 
-static std::random_device rand_device;
-static std::mt19937 generator(rand_device());
-static std::uniform_int_distribution<int> distr01(0, 1);
+// std
+#include <iostream>
+#include <unordered_set>
 
-void Grid::Update(float* color_buffer)
+void Grid::Init(const int window_width, const int window_height)
+{
+    glGenTextures(1, &this->texture_id_curr);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, window_width, window_height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenTextures(1, &this->texture_id_next);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, this->texture_id_next);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, window_width, window_height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    /*
+    for (int row = 0; row < nof_rows; row++) {
+        for (int col = 0; col < nof_cols; col++) {
+            this->SetCellColor(row, col + 3, { 0.0f, 1.0f, 0.0f });
+            break;
+        }
+        break;
+    }
+    */
+
+}
+
+void Grid::Update()
 {
 
-    static int NOF_FLOATS_PER_COLOR = 3;
-    std::unordered_set<int> future;
-    future.reserve(cells.size());
+    this->compShader.Bind();
+    this->compShader.SetInteger1(cell_size, "cell_size");
+    this->compShader.SetInteger1(nof_cols, "nof_cols");
+    this->compShader.SetInteger1(nof_rows, "nof_rows");
 
-    // Only iterates over 'active' (colored) cells.
-    for (const auto& cell : cells) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_id_curr);
+    glBindImageTexture(0, texture_id_curr, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
-        const int row = cell / (NOF_FLOATS_PER_COLOR * nof_cols);
-        const int col = (cell % (NOF_FLOATS_PER_COLOR * nof_cols)) / NOF_FLOATS_PER_COLOR;
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, texture_id_next);
+    glBindImageTexture(1, texture_id_next, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
-        // Cell already on the floor.
-        if (row == nof_rows - 1) {
-            future.insert(cell);
-            continue;
-        }
+    glDispatchCompute(nof_cols, nof_rows, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-        // Try to go down.
-        int idxSouth = (row + 1) * (NOF_FLOATS_PER_COLOR * nof_cols) + (NOF_FLOATS_PER_COLOR * col);
-        if (!cells.contains(idxSouth)) {
-            future.insert(idxSouth);
+    std::swap(texture_id_curr, texture_id_next);
+    temp = (temp + 1) % 2;
 
-            color_buffer[idxSouth    ] = color_buffer[cell    ];
-            color_buffer[idxSouth + 1] = color_buffer[cell + 1];
-            color_buffer[idxSouth + 2] = color_buffer[cell + 2];
+    glClearTexImage(texture_id_next, 0, GL_RGBA, GL_FLOAT, 0);
 
-            color_buffer[cell    ] = 0.0f;
-            color_buffer[cell + 1] = 0.0f;
-            color_buffer[cell + 2] = 0.0f;
+}
 
-            continue;
-        }
+void Grid::SetCellColor(const int row, const int col, glm::vec3 color)
+{
 
-        // Couldn't go down, let's try to go down and left/right then.
-        const int dir = 2 * distr01(generator) - 1;
+    // Convert to texture coordinates (pixel position)
+    const int pixelX = col * this->cell_size;
+    const int pixelY = (nof_rows - 1 - row) * this->cell_size;
 
-        // Can't move left or right either => Stay put.
-        if (col + dir < 0 || col + dir >= nof_cols) {
-            future.insert(cell);
-            continue;
-        }
+    std::vector<glm::vec4> block(cell_size * cell_size, glm::vec4(color, 1.0f));
+    if (temp == 0) {
+        glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
+    }
+    else {
+        glBindTexture(GL_TEXTURE_2D, this->texture_id_next);
+    }
+    glTexSubImage2D(GL_TEXTURE_2D, 0, pixelX, pixelY, cell_size, cell_size, GL_RGBA, GL_FLOAT, block.data());
+}
 
-        int idxLateral = (row + 1) * (NOF_FLOATS_PER_COLOR * nof_cols) + (NOF_FLOATS_PER_COLOR * (col + dir));
-        if (!cells.contains(idxLateral)) {
-            future.insert(idxLateral);
-
-            color_buffer[idxLateral    ] = color_buffer[cell    ];
-            color_buffer[idxLateral + 1] = color_buffer[cell + 1];
-            color_buffer[idxLateral + 2] = color_buffer[cell + 2];
-
-            color_buffer[cell    ] = 0.0f;
-            color_buffer[cell + 1] = 0.0f;
-            color_buffer[cell + 2] = 0.0f;
-
-            continue;
-        }
-
-        // No movement.
-        future.insert(cell);
-
+void Grid::Draw()
+{
+    if (!vao) {
+        glGenVertexArrays(1, &vao);
     }
 
-    cells = std::move(future);
+    this->shader.Bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }
