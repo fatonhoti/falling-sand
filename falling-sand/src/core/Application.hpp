@@ -16,7 +16,7 @@
 class Application {
 
 public:
-	static Application& GetInstance() {
+	[[nodiscard]] static Application& GetInstance() {
 		static Application instance;
 		return instance;
 	}
@@ -26,10 +26,10 @@ public:
 
 	void Start();
 
-	int Init(const int window_width, const int window_height, const std::string title);
+	[[nodiscard]] int Init(const int window_width, const int window_height, const std::string title);
 	void Destroy();
 
-	int AttachAppInstance(const std::unique_ptr<AppInstance> ai);
+	[[nodiscard]] int AttachAppInstance(const std::unique_ptr<AppInstance> ai);
 	std::optional<std::unique_ptr<AppInstance>> DetachAppInstance();
 
 private:
@@ -47,9 +47,9 @@ private:
 	bool glad_initialized = false;
 	bool app_initialized = false;
 
-	int InitGLFW(const int window_width, const int window_height, const std::string title);
-	int InitGLAD();
-	double GetDeltatime();
+	[[nodiscard]] int InitGLFW(const int window_width, const int window_height, const std::string title);
+	[[nodiscard]] int InitGLAD();
+	[[nodiscard]] double GetDeltatime();
 };
 
 namespace {

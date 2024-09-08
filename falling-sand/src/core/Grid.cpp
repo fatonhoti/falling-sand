@@ -1,11 +1,18 @@
 #include "Grid.hpp"
 
-// std
-#include <iostream>
-#include <unordered_set>
+Grid::~Grid()
+{
+    if (vao) glDeleteVertexArrays(1, &vao);
+    if (this->texture_id_curr) glDeleteTextures(1, &this->texture_id_curr);
+    if (this->texture_id_next) glDeleteTextures(1, &this->texture_id_next);
+}
 
 void Grid::Init(const int window_width, const int window_height)
 {
+
+    // Empty VAO
+    glGenVertexArrays(1, &vao);
+
     glGenTextures(1, &this->texture_id_curr);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
@@ -21,16 +28,6 @@ void Grid::Init(const int window_width, const int window_height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    /*
-    for (int row = 0; row < nof_rows; row++) {
-        for (int col = 0; col < nof_cols; col++) {
-            this->SetCellColor(row, col + 3, { 0.0f, 1.0f, 0.0f });
-            break;
-        }
-        break;
-    }
-    */
 
 }
 
@@ -54,36 +51,31 @@ void Grid::Update()
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     std::swap(texture_id_curr, texture_id_next);
-    temp = (temp + 1) % 2;
-
-    glClearTexImage(texture_id_next, 0, GL_RGBA, GL_FLOAT, 0);
+    glClearTexImage(texture_id_next, 0, GL_RGBA, GL_FLOAT, 0); // Clear residual data from last frame.
 
 }
 
 void Grid::SetCellColor(const int row, const int col, glm::vec3 color)
 {
 
-    // Convert to texture coordinates (pixel position)
+    if (row < 0 || row >= this->nof_rows)
+        return;
+
+    if (col < 0 || col >= this->nof_cols)
+        return;
+
     const int pixelX = col * this->cell_size;
     const int pixelY = (nof_rows - 1 - row) * this->cell_size;
 
     std::vector<glm::vec4> block(cell_size * cell_size, glm::vec4(color, 1.0f));
-    if (temp == 0) {
-        glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
-    }
-    else {
-        glBindTexture(GL_TEXTURE_2D, this->texture_id_next);
-    }
+    glBindTexture(GL_TEXTURE_2D, std::min(this->texture_id_curr, this->texture_id_next));
     glTexSubImage2D(GL_TEXTURE_2D, 0, pixelX, pixelY, cell_size, cell_size, GL_RGBA, GL_FLOAT, block.data());
 }
 
-void Grid::Draw()
+void Grid::Draw() const
 {
-    if (!vao) {
-        glGenVertexArrays(1, &vao);
-    }
-
     this->shader.Bind();
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
 

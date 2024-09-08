@@ -9,26 +9,15 @@ uniform int nof_cols; // Number of columns in the grid
 uniform int nof_rows; // Number of rows in the grid
 uniform int cell_size; // Size of each cell
 
-ivec2 flip_y_coord(ivec2 coord) {
-    coord.y = (nof_rows - 1) - coord.y;
-    return coord;
-}
-
-bool isEqual(const float a, const float b) {
-    float epsilon = 0.001; // Define an appropriate epsilon value
-    return abs(a - b) < epsilon;
-}
-
-void setPixel(ivec2 topleft, vec4 color) {
-    for (int y = 0; y < cell_size; ++y)
-        for (int x = 0; x < cell_size; ++x)
-            imageStore(nextState, topleft + ivec2(x, -y), color);
-    return;
-}
+bool isEqual(const float a, const float b);
+bool isBlack(const vec4 color);
+void setPixels(ivec2 topleft, vec4 color);
+void setPixels(ivec2 topLeft1, vec4 color1, ivec2 topLeft2, vec4 color2);
 
 void main() {
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 topLeftPixel = flip_y_coord(pixelCoord) * cell_size;
+    pixelCoord.y = (nof_rows - 1) - pixelCoord.y; // We want to start at top-left, so flip y-axis
+    ivec2 topLeftPixel = pixelCoord * cell_size;
     topLeftPixel.y += (cell_size - 1);
 
     vec4 currentColor = imageLoad(currentState, topLeftPixel);
@@ -41,7 +30,7 @@ void main() {
     // Check if the cell is on the bottom row
     if (topLeftPixel.y - (cell_size - 1) < cell_size) {
         // Keep the cell at the bottom
-        setPixel(topLeftPixel, currentColor);
+        setPixels(topLeftPixel, currentColor);
         return;
     }
 
@@ -54,14 +43,8 @@ void main() {
     ivec2 southTopLeftPixel = topLeftPixel + cell_size * ivec2(0, -1);
     vec4 southColor = imageLoad(currentState, southTopLeftPixel);
 
-    if (isEqual(southColor.r, 0.0f) && isEqual(southColor.g, 0.0f) && isEqual(southColor.b, 0.0f)) {
-        // Move down
-        for (int y = 0; y < cell_size; ++y) {
-            for (int x = 0; x < cell_size; ++x) {
-                imageStore(nextState, southTopLeftPixel + ivec2(x, -y), currentColor);
-                imageStore(nextState, topLeftPixel + ivec2(x, -y), vec4(0.0));
-            }
-        }
+    if (isBlack(southColor)) {
+        setPixels(southTopLeftPixel, currentColor, topLeftPixel, vec4(0.0));
         return;
     }
 
@@ -69,26 +52,41 @@ void main() {
     int dir = (int(mod(float(gl_GlobalInvocationID.x + gl_GlobalInvocationID.y), 2.0)) * 2) - 1; // Randomly choose -1 or 1
     ivec2 lateralTopLeftPixel = topLeftPixel + cell_size * ivec2(dir, -1);
 
-    // Ensure movement is within bounds
     if (lateralTopLeftPixel.x >= 0 && (lateralTopLeftPixel.x + (cell_size - 1)) < (nof_cols * cell_size)) {
         vec4 lateralColor = imageLoad(currentState, lateralTopLeftPixel);
-
-        if (isEqual(lateralColor.r, 0.0f) && isEqual(lateralColor.g, 0.0f) && isEqual(lateralColor.b, 0.0f)) {
-            // Move laterally
-            for (int y = 0; y < cell_size; ++y) {
-                for (int x = 0; x < cell_size; ++x) {
-                    imageStore(nextState, lateralTopLeftPixel + ivec2(x, -y), currentColor);
-                    imageStore(nextState, topLeftPixel + ivec2(x, -y), vec4(0.0));
-                }
-            }
+        if (isBlack(lateralColor)) {
+            setPixels(lateralTopLeftPixel, currentColor, topLeftPixel, vec4(0.0));
             return;
         }
     }
 
     // No movement possible, stay in place
+    setPixels(topLeftPixel, currentColor);
+}
+
+
+bool isEqual(const float a, const float b) {
+    float epsilon = 0.001;
+    return abs(a - b) < epsilon;
+}
+
+bool isBlack(const vec4 color) {
+    return isEqual(color.r, 0.0f) && isEqual(color.g, 0.0f) && isEqual(color.b, 0.0f);
+}
+
+void setPixels(ivec2 topleft, vec4 color) {
+    for (int y = 0; y < cell_size; ++y)
+        for (int x = 0; x < cell_size; ++x)
+            imageStore(nextState, topleft + ivec2(x, -y), color);
+    return;
+}
+
+void setPixels(ivec2 topLeft1, vec4 color1, ivec2 topLeft2, vec4 color2) {
     for (int y = 0; y < cell_size; ++y) {
         for (int x = 0; x < cell_size; ++x) {
-            imageStore(nextState, topLeftPixel + ivec2(x, -y), currentColor);
+            imageStore(nextState, topLeft1 + ivec2(x, -y), color1);
+            imageStore(nextState, topLeft2 + ivec2(x, -y), color2);
         }
     }
+    return;
 }

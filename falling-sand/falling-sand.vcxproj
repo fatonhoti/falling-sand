@@ -97,20 +97,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\AppInstance.hpp" />
-    <ClInclude Include="src\Application.hpp" />
-    <ClInclude Include="src\ComputeShader.hpp" />
-    <ClInclude Include="src\Grid.hpp" />
-    <ClInclude Include="src\InputHandler.hpp" />
-    <ClInclude Include="src\Shader.hpp" />
+    <ClInclude Include="src\core\AppInstance.hpp" />
+    <ClInclude Include="src\core\Application.hpp" />
+    <ClInclude Include="src\core\ComputeShader.hpp" />
+    <ClInclude Include="src\core\Grid.hpp" />
+    <ClInclude Include="src\core\InputHandler.hpp" />
+    <ClInclude Include="src\core\Shader.hpp" />
     <ClInclude Include="src\FallingSand.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\ComputeShader.cpp" />
-    <ClCompile Include="src\Grid.cpp" />
-    <ClCompile Include="src\InputHandler.cpp" />
-    <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\core\Application.cpp" />
+    <ClCompile Include="src\core\ComputeShader.cpp" />
+    <ClCompile Include="src\core\Grid.cpp" />
+    <ClCompile Include="src\core\InputHandler.cpp" />
+    <ClCompile Include="src\core\Shader.cpp" />
     <ClCompile Include="src\FallingSand.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="vendor\glad\src\glad.c" />

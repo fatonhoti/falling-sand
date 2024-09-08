@@ -1,8 +1,10 @@
 #include "InputHandler.hpp"
 
+// https://www.glfw.org/docs/latest/group__keys.html
 bool InputHandler::PressedKeys[348] = { false };
 bool InputHandler::ReleasedKeys[348] = { false };
 
+// https://www.glfw.org/docs/latest/group__buttons.html
 bool InputHandler::PressedButtons[8] = { false };
 bool InputHandler::ReleasedButtons[8] = { false };
 

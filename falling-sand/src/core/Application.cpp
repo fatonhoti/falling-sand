@@ -14,15 +14,17 @@ void Application::Start()
         return;
     }
 
-    app_instance->Init();
+    if (app_instance->Init()) {
+        std::cout << "[APPLICATION][START][ERROR] Failed to initialize application instance.\n";
+        return;
+    }
 
     while (!glfwWindowShouldClose(this->window.handle))
     {
         const double dt = this->GetDeltatime();
 
-        int error = app_instance->Tick(dt);
-        if (error) {
-            std::cout << "[APPLICATION][START][ERROR] Application instanced returned error. Exiting gracefully\n";
+        if (app_instance->Tick(dt)) [[unlikely]] {
+            std::cout << "[APPLICATION][START][ERROR] Instanced application returned.\n";
             break;
         }
 
@@ -42,6 +44,7 @@ int Application::Init(const int window_width, const int window_height, const std
 
     if (InitGLFW(window_width, window_height, title))
         return -1;
+
     glfw_initialized = true;
 
     window.width = window_width;
@@ -50,6 +53,7 @@ int Application::Init(const int window_width, const int window_height, const std
 
     if (InitGLAD())
         return -1;
+
     glad_initialized = true;
 
     glViewport(0, 0, window.width, window.height);
@@ -81,9 +85,9 @@ std::optional<std::unique_ptr<AppInstance>> Application::DetachAppInstance()
         return std::nullopt;
     }
 
-    auto i = std::move(app_instance);
+    std::unique_ptr<AppInstance> i = std::move(app_instance);
     app_instance = nullptr;
-    return i;
+    return std::move(i);
 }
 
 int Application::InitGLFW(const int window_width, const int window_height, const std::string title)
@@ -169,6 +173,9 @@ namespace {
 
     void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
+        if (key == GLFW_KEY_UNKNOWN)
+            return;
+
         InputHandler::UpdateKeyInput(key, action);
     }
 

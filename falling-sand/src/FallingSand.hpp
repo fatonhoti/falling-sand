@@ -4,8 +4,8 @@
 #include <memory>
 
 // src
-#include "AppInstance.hpp"
-#include "Grid.hpp"
+#include "core/AppInstance.hpp"
+#include "core/Grid.hpp"
 
 class FallingSand : public AppInstance {
 public:

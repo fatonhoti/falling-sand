@@ -17,7 +17,7 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
-	GLuint GetShaderProgram() const;
+	[[nodiscard]] GLuint GetShaderProgram() const;
 
 	void SetMat4x4(const glm::mat4x4& mat, const std::string& uniform_name);
 	void SetVec4(const glm::vec4& vec, const std::string& uniform_name);
@@ -28,9 +28,9 @@ public:
 
 private:
 	GLuint m_shader_program{ 0 };
-	GLuint CreateShader(std::string& shader_name, unsigned int shader_type);
-	GLuint CheckForErrors(unsigned int shader, unsigned int err_type);
+	[[nodiscard]] GLuint CreateShader(std::string& shader_name, unsigned int shader_type);
+	[[nodiscard]] GLuint CheckForErrors(unsigned int shader, unsigned int err_type);
 
-	int GetUniformLoc(const std::string& uniform_name);
+	[[nodiscard]] int GetUniformLoc(const std::string& uniform_name);
 	std::unordered_map<std::string, int> m_UniformCache{};
 };

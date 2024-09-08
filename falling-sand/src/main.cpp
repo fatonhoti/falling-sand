@@ -2,7 +2,7 @@
 #include <iostream>
 
 // src
-#include "Application.hpp"
+#include "core/Application.hpp"
 #include "FallingSand.hpp"
 
 int main()
@@ -10,13 +10,15 @@ int main()
 
     Application& app = Application::GetInstance();
 
-    if (app.Init(800, 600, "Falling Sand")) {
+    if (app.Init(1200, 800, "Falling Sand")) {
         std::cout << "[MAIN][ERROR] Application failed to initialize.\n";
         return -1;
     }
 
-    app.AttachAppInstance(std::move(std::make_unique<FallingSand>()));
-    app.Start();
+    if (app.AttachAppInstance(std::move(std::make_unique<FallingSand>())) == 0) {
+        app.Start();
+    }
+
     app.Destroy();
 
     return 0;

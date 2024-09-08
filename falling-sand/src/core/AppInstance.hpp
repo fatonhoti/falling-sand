@@ -10,8 +10,8 @@
 class AppInstance {
 public:
     virtual ~AppInstance() = default;
-    virtual int Init() = 0;
-    virtual int Tick(const double dt) = 0;
+    [[nodiscard]] virtual int Init() = 0;
+    [[nodiscard]] virtual int Tick(const double dt) = 0;
     virtual void Destroy() = 0;
     void SetWindowHandle(GLFWwindow* handle) {
         this->window_handle = handle;
