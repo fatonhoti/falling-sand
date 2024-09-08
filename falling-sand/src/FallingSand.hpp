@@ -5,7 +5,7 @@
 
 // src
 #include "core/AppInstance.hpp"
-#include "core/Grid.hpp"
+#include "Grid.hpp"
 
 class FallingSand : public AppInstance {
 public:

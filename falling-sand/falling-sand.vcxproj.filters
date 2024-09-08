@@ -30,7 +30,7 @@
     <ClInclude Include="src\FallingSand.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Grid.hpp">
+    <ClInclude Include="src\Grid.hpp">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\core\ComputeShader.hpp">
@@ -56,7 +56,7 @@
     <ClCompile Include="vendor\glad\src\glad.c">
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\Grid.cpp" />
+    <ClCompile Include="src\Grid.cpp" />
     <ClCompile Include="src\core\ComputeShader.cpp" />
   </ItemGroup>
   <ItemGroup>

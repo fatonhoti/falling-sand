@@ -4,8 +4,8 @@
 #include "glad/glad.h"
 
 // src
-#include "Shader.hpp"
-#include "ComputeShader.hpp"
+#include "core/Shader.hpp"
+#include "core/ComputeShader.hpp"
 
 struct Grid {
     Grid() = default;
