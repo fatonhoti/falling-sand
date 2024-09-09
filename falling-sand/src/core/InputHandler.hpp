@@ -7,24 +7,18 @@
 class InputHandler
 {
 public:
-    // Update key input state
     static void UpdateKeyInput(int key, int action);
 
-    // Check if a key is currently pressed or released
     [[nodiscard]] static bool IsKeyPressed(int key);
     [[nodiscard]] static bool IsKeyReleased(int key);
 
-    // Update button input state
     static void UpdateButtonInput(int button, int action);
 
-    // Check if a mouse button is currently pressed or released
     [[nodiscard]] static bool IsButtonPressed(int button);
     [[nodiscard]] static bool IsButtonReleased(int button);
 
-    // Update the cursor position
     static void UpdateCursorPosition(double xpos, double ypos);
 
-    // Get the latest cursor position
     [[nodiscard]] static glm::vec2 GetCursorPosition();
 
 private:

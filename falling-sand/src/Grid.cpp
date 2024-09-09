@@ -1,5 +1,8 @@
 #include "Grid.hpp"
 
+#include <chrono>
+#include <iostream>
+
 Grid::~Grid()
 {
     if (vao) glDeleteVertexArrays(1, &vao);
@@ -39,7 +42,7 @@ void Grid::Update()
 
     if (!initialized) [[unlikely]]
         std::cout << "[GRID][UPDATE][ERROR] You have not ran Grid::Init().\n";
-
+    
     this->compShader.Bind();
     this->compShader.SetInteger1(cell_size, "cell_size");
     this->compShader.SetInteger1(nof_cols, "nof_cols");

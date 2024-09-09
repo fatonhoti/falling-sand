@@ -48,7 +48,6 @@ private:
 
 	[[nodiscard]] int InitGLFW(const int window_width, const int window_height, const std::string title);
 	[[nodiscard]] int InitGLAD();
-	[[nodiscard]] double GetDeltatime();
 };
 
 namespace {

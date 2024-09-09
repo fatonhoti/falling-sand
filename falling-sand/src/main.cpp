@@ -10,8 +10,8 @@ int main()
 
     Application& app = Application::GetInstance();
 
-    if (app.Init(1200, 800, "Falling Sand")) {
-        std::cout << "[MAIN][ERROR] Application failed to initialize.\n";
+    if (app.Init(1600, 900, "Falling Sand")) {
+        std::cout << "[Main][ERROR] Application failed to initialize.\n";
         return -1;
     }
 

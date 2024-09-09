@@ -23,7 +23,7 @@ void main() {
     vec4 currentColor = imageLoad(currentState, topLeftPixel);
 
     // Skip empty cells
-    if (isEqual(currentColor.r, 0.0f) && isEqual(currentColor.g, 0.0f) && isEqual(currentColor.b, 0.0f)) {
+    if (isBlack(currentColor)) {
         return;
     }
 

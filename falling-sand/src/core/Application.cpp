@@ -9,21 +9,27 @@
 void Application::Start()
 {
     if (!app_initialized) {
-        std::cout << "[APPLICATION][START][ERROR] Application has not been initialized, call 'Init()' before calling 'Run()'";
+        std::cout << "[Application][Start][ERROR] Application has not been initialized, call 'Init()' before calling 'Run()'";
         return;
     }
 
     if (app_instance->Init()) {
-        std::cout << "[APPLICATION][START][ERROR] Failed to initialize application instance.\n";
+        std::cout << "[Application][Start][ERROR] Failed to initialize application instance.\n";
         return;
     }
 
+    static double currentTime = 0.0;
+    static double lastTime = 0.0;
+    static double dt = 0.0;
+
     while (!glfwWindowShouldClose(this->window.handle))
     {
-        const double dt = this->GetDeltatime();
+        currentTime = glfwGetTime();
+        dt = currentTime - lastTime;
+        lastTime = currentTime;
 
         if (app_instance->Tick(dt)) [[unlikely]] {
-            std::cout << "[APPLICATION][START][NOTICE] Instanced application returned.\n";
+            std::cout << "[Application][Start][NOTICE] Instanced application returned.\n";
             break;
         }
 
@@ -137,19 +143,6 @@ int Application::InitGLAD()
 
     return 0;
 
-}
-
-double Application::GetDeltatime()
-{
-    static double lastTime = 0;
-    static int frame = 0;
-    static double fps = 0;
-
-    double currentTime = glfwGetTime();
-    double delta = currentTime - lastTime;
-    lastTime = currentTime;
-
-    return delta;
 }
 
 void Application::Destroy()

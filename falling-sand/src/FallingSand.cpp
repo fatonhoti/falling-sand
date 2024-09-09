@@ -36,7 +36,7 @@ int FallingSand::Init()
 	int w, h;
 	glfwGetFramebufferSize(this->window_handle, &w, &h);
 
-	const int CELL_SIZE = 2;
+	const int CELL_SIZE = 1;
 	this->grid.cell_size = CELL_SIZE;
 	this->grid.nof_cols = w / CELL_SIZE;
 	this->grid.nof_rows = h / CELL_SIZE;
