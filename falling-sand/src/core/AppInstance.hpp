@@ -1,11 +1,7 @@
 #pragma once
 
-// vendor
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
-
-// std
-#include <memory>
 
 class AppInstance {
 public:

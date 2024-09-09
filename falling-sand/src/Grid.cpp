@@ -7,7 +7,7 @@ Grid::~Grid()
     if (this->texture_id_next) glDeleteTextures(1, &this->texture_id_next);
 }
 
-void Grid::Init(const int window_width, const int window_height)
+int Grid::Init(const int window_width, const int window_height)
 {
 
     // Empty VAO
@@ -29,10 +29,16 @@ void Grid::Init(const int window_width, const int window_height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    this->initialized = true;
+
+    return 0;
 }
 
 void Grid::Update()
 {
+
+    if (!initialized) [[unlikely]]
+        std::cout << "[GRID][UPDATE][ERROR] You have not ran Grid::Init().\n";
 
     this->compShader.Bind();
     this->compShader.SetInteger1(cell_size, "cell_size");
@@ -55,8 +61,26 @@ void Grid::Update()
 
 }
 
+void Grid::Draw() const
+{
+
+    if (!initialized) [[unlikely]]
+        std::cout << "[GRID][UPDATE][ERROR] You have not ran Grid::Init().\n";
+
+    this->shader.Bind();
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
 void Grid::SetCellColor(const int row, const int col, glm::vec3 color)
 {
+
+    if (!initialized) [[unlikely]]
+        std::cout << "[GRID][UPDATE][ERROR] You have not ran Grid::Init().\n";
 
     if (row < 0 || row >= this->nof_rows)
         return;
@@ -70,15 +94,4 @@ void Grid::SetCellColor(const int row, const int col, glm::vec3 color)
     std::vector<glm::vec4> block(cell_size * cell_size, glm::vec4(color, 1.0f));
     glBindTexture(GL_TEXTURE_2D, std::min(this->texture_id_curr, this->texture_id_next));
     glTexSubImage2D(GL_TEXTURE_2D, 0, pixelX, pixelY, cell_size, cell_size, GL_RGBA, GL_FLOAT, block.data());
-}
-
-void Grid::Draw() const
-{
-    this->shader.Bind();
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->texture_id_curr);
-
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
 }

@@ -2,7 +2,6 @@
 
 // std
 #include <iostream>
-#include <format>
 
 // src
 #include "InputHandler.hpp"
@@ -24,7 +23,7 @@ void Application::Start()
         const double dt = this->GetDeltatime();
 
         if (app_instance->Tick(dt)) [[unlikely]] {
-            std::cout << "[APPLICATION][START][ERROR] Instanced application returned.\n";
+            std::cout << "[APPLICATION][START][NOTICE] Instanced application returned.\n";
             break;
         }
 
@@ -188,7 +187,7 @@ namespace {
         if (xpos < 0.0 || xpos > static_cast<double>(w) - 1.0 || ypos < 0.0 || ypos > static_cast<double>(h) - 1.0)
             return;
 
-        InputHandler::UpdateLatestCursorPosition(xpos, ypos);
+        InputHandler::UpdateCursorPosition(xpos, ypos);
     }
 
     void cursor_enter_callback(GLFWwindow* window, int entered)

@@ -33,9 +33,6 @@
     <ClInclude Include="src\Grid.hpp">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\ComputeShader.hpp">
-      <Filter>src</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -57,7 +54,6 @@
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
     <ClCompile Include="src\Grid.cpp" />
-    <ClCompile Include="src\core\ComputeShader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\grid_update.comp" />

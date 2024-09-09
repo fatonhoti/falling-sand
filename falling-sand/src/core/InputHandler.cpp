@@ -1,77 +1,57 @@
 #include "InputHandler.hpp"
 
-// https://www.glfw.org/docs/latest/group__keys.html
-bool InputHandler::PressedKeys[348] = { false };
-bool InputHandler::ReleasedKeys[348] = { false };
+bool InputHandler::PressedKeys[GLFW_KEY_LAST + 1] = { false };
+bool InputHandler::ReleasedKeys[GLFW_KEY_LAST + 1] = { false };
 
-// https://www.glfw.org/docs/latest/group__buttons.html
-bool InputHandler::PressedButtons[8] = { false };
-bool InputHandler::ReleasedButtons[8] = { false };
+bool InputHandler::PressedButtons[GLFW_MOUSE_BUTTON_LAST + 1] = { false };
+bool InputHandler::ReleasedButtons[GLFW_MOUSE_BUTTON_LAST + 1] = { false };
 
-double InputHandler::LatestCursorXPOS = 1.0f;
-double InputHandler::LatestCursorYPOS = 1.0f;
+double InputHandler::CursorXPos = 0.0;
+double InputHandler::CursorYPos = 0.0;
 
 void InputHandler::UpdateKeyInput(int key, int action)
 {
-	switch (action) {
-	case GLFW_PRESS:
-		PressedKeys[key] = true;
-		ReleasedKeys[key] = false;
-		break;
-	case GLFW_RELEASE:
-		ReleasedKeys[key] = true;
-		PressedKeys[key] = false;
-		break;
-	default:
-		// uh...
-		break;
-	};
+    if (key >= 0 && key <= GLFW_KEY_LAST) {
+        PressedKeys[key] = (action == GLFW_PRESS);
+        ReleasedKeys[key] = (action == GLFW_RELEASE);
+    }
 }
 
-int InputHandler::KeyPressed(int key)
+bool InputHandler::IsKeyPressed(int key)
 {
-	return PressedKeys[key];
+    return key >= 0 && key <= GLFW_KEY_LAST && PressedKeys[key];
 }
 
-int InputHandler::KeyReleased(int key)
+bool InputHandler::IsKeyReleased(int key)
 {
-	return ReleasedKeys[key];
+    return key >= 0 && key <= GLFW_KEY_LAST && ReleasedKeys[key];
 }
 
 void InputHandler::UpdateButtonInput(int button, int action)
 {
-	switch (action) {
-	case GLFW_PRESS:
-		PressedButtons[button] = true;
-		ReleasedButtons[button] = false;
-		break;
-	case GLFW_RELEASE:
-		ReleasedButtons[button] = true;
-		PressedButtons[button] = false;
-		break;
-	default:
-		// uh...
-		break;
-	};
+    if (button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST) {
+        PressedButtons[button] = (action == GLFW_PRESS);
+        ReleasedButtons[button] = (action == GLFW_RELEASE);
+    }
 }
 
-int InputHandler::ButtonPressed(int button)
+bool InputHandler::IsButtonPressed(int button)
 {
-	return PressedButtons[button];
+    return button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST && PressedButtons[button];
 }
 
-int InputHandler::ButtonReleased(int button)
+bool InputHandler::IsButtonReleased(int button)
 {
-	return ReleasedButtons[button];
+    return button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST && ReleasedButtons[button];
 }
 
-void InputHandler::UpdateLatestCursorPosition(double xpos, double ypos)
+void InputHandler::UpdateCursorPosition(double xpos, double ypos)
 {
-	LatestCursorXPOS = xpos;
-	LatestCursorYPOS = ypos;
+    CursorXPos = xpos;
+    CursorYPos = ypos;
 }
 
-glm::vec2 InputHandler::GetLatestCursorPosition()
+glm::vec2 InputHandler::GetCursorPosition()
 {
-	return { LatestCursorXPOS, LatestCursorYPOS };
+    return { CursorXPos, CursorYPos };
 }

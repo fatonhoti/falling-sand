@@ -1,188 +1,175 @@
 #include "Shader.hpp"
 
-// vendor
-#include "glad/glad.h"
-#include "gtc/type_ptr.hpp"
-
-// std
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-namespace fs = std::filesystem;
-
-Shader::~Shader()
-{
-	glDeleteShader(m_shader_program);
+Shader::~Shader() {
+    glDeleteShader(m_shader_program);
 }
 
-Shader::Shader(std::string shader_name)
-{
-	auto base_dir = fs::current_path().append("src").append("shaders").string();
-	auto path_vert = base_dir + "\\" + shader_name + ".vert";
-	auto path_frag = base_dir + "\\" + shader_name + ".frag";
+Shader::Shader(std::string shader_name, ShaderType type) : m_shader_type(type) {
+    auto base_dir = fs::current_path().append("src").append("shaders").string();
+    GLuint shader_program = glCreateProgram();
 
-	GLuint v_shader = CreateShader(path_vert, GL_VERTEX_SHADER);
-	if (v_shader == -1) {
-		std::cout << "[SHADER][Constructor][ERROR] COULD_NOT_CREATE_VERTEX_SHADER" << std::endl;
-		exit(1);
-	}
+    if (type == ShaderType::GRAPHICS) {
+        auto path_vert = base_dir + "\\" + shader_name + ".vert";
+        auto path_frag = base_dir + "\\" + shader_name + ".frag";
 
-	GLuint f_shader = CreateShader(path_frag, GL_FRAGMENT_SHADER);
-	if (f_shader == -1) {
-		std::cout << "[SHADER][Constructor][ERROR] COULD_NOT_CREATE_FRAGMENT_SHADER" << std::endl;
-		exit(1);
-	}
+        GLuint v_shader = CreateShader(path_vert, GL_VERTEX_SHADER);
+        if (v_shader == -1) {
+            std::cout << "[Shader][Constructor][ERROR] COULD_NOT_CREATE_VERTEX_SHADER\n";
+            exit(1); // just bail
+        }
 
-	GLuint shader_program;
-	shader_program = glCreateProgram();
+        GLuint f_shader = CreateShader(path_frag, GL_FRAGMENT_SHADER);
+        if (f_shader == -1) {
+            std::cout << "[Shader][Constructor][ERROR] COULD_NOT_CREATE_FRAGMENT_SHADER\n";
+            exit(1); // just bail
+        }
 
-	glAttachShader(shader_program, v_shader);
-	glAttachShader(shader_program, f_shader);
-	glLinkProgram(shader_program);
+        glAttachShader(shader_program, v_shader);
+        glAttachShader(shader_program, f_shader);
 
-	GLuint err = CheckForErrors(shader_program, GL_LINK_STATUS);
-	if (err == -1) {
-		std::cout << "[SHADER][Constructor][ERROR] COULD_NOT_CREATE_SHADER: " + shader_name << std::endl;
-		exit(1);
-	}
+        glDeleteShader(v_shader);
+        glDeleteShader(f_shader);
+    }
+    else if (type == ShaderType::COMPUTE) {
+        auto path_comp = base_dir + "\\" + shader_name + ".comp";
 
-	m_shader_program = shader_program;
+        GLuint c_shader = CreateShader(path_comp, GL_COMPUTE_SHADER);
+        if (c_shader == -1) {
+            std::cout << "[Shader][Constructor][ERROR] COULD_NOT_CREATE_COMPUTE_SHADER\n";
+            exit(1); // just bail
+        }
 
-	glDeleteShader(v_shader);
-	glDeleteShader(f_shader);
+        glAttachShader(shader_program, c_shader);
+
+        glDeleteShader(c_shader);
+    }
+
+    glLinkProgram(shader_program);
+
+    if (CheckForErrors(shader_program, GL_LINK_STATUS) == -1) {
+        std::cout << "[Shader][Constructor][ERROR] COULD_NOT_LINK_SHADER: " + shader_name << "\n";
+        exit(1); // just bail
+    }
+
+    m_shader_program = shader_program;
 }
 
-void Shader::Bind() const
-{
-	glUseProgram(m_shader_program);
+void Shader::Bind() const {
+    glUseProgram(m_shader_program);
 }
 
-void Shader::Unbind() const
-{
-	glUseProgram(0);
+void Shader::Unbind() const {
+    glUseProgram(0);
 }
 
-GLuint Shader::GetShaderProgram() const
-{
-	return m_shader_program;
+GLuint Shader::GetShaderProgram() const {
+    return m_shader_program;
 }
 
 void Shader::SetMat4x4(const glm::mat4x4& mat, const std::string& uniform_name) {
-	auto uniform_location = GetUniformLoc(uniform_name);
-	if (uniform_location == -1)
-		return;
-	glUniformMatrix4fv(uniform_location, 1, GL_FALSE, glm::value_ptr(mat));
+    auto uniform_location = GetUniformLoc(uniform_name);
+    if (uniform_location != -1) {
+        glUniformMatrix4fv(uniform_location, 1, GL_FALSE, glm::value_ptr(mat));
+    }
 }
 
 void Shader::SetVec4(const glm::vec4& vec, const std::string& uniform_name) {
-	auto uniform_location = GetUniformLoc(uniform_name);
-	if (uniform_location == -1)
-		return;
-	glUniform4fv(uniform_location, 1, glm::value_ptr(vec));
+    auto uniform_location = GetUniformLoc(uniform_name);
+    if (uniform_location != -1) {
+        glUniform4fv(uniform_location, 1, glm::value_ptr(vec));
+    }
 }
 
-void Shader::SetVec3(const glm::vec3& vec, const std::string& uniform_name)
-{
-	auto uniform_location = GetUniformLoc(uniform_name);
-	if (uniform_location == -1)
-		return;
-	glUniform3fv(uniform_location, 1, glm::value_ptr(vec));
+void Shader::SetVec3(const glm::vec3& vec, const std::string& uniform_name) {
+    auto uniform_location = GetUniformLoc(uniform_name);
+    if (uniform_location != -1) {
+        glUniform3fv(uniform_location, 1, glm::value_ptr(vec));
+    }
 }
 
-void Shader::SetVec2(const glm::vec2& vec, const std::string& uniform_name)
-{
-	auto uniform_location = GetUniformLoc(uniform_name);
-	if (uniform_location == -1)
-		return;
-	glUniform2fv(uniform_location, 1, glm::value_ptr(vec));
+void Shader::SetVec2(const glm::vec2& vec, const std::string& uniform_name) {
+    auto uniform_location = GetUniformLoc(uniform_name);
+    if (uniform_location != -1) {
+        glUniform2fv(uniform_location, 1, glm::value_ptr(vec));
+    }
 }
 
-void Shader::SetInteger1(const int& integer, const std::string& uniform_name)
-{
-	auto uniform_location = GetUniformLoc(uniform_name);
-	if (uniform_location == -1)
-		return;
-	glUniform1i(uniform_location, integer);
+void Shader::SetInteger1(const int& integer, const std::string& uniform_name) {
+    auto uniform_location = GetUniformLoc(uniform_name);
+    if (uniform_location != -1) {
+        glUniform1i(uniform_location, integer);
+    }
 }
 
-void Shader::SetFloat1(const float& float_, const std::string& uniform_name)
-{
-	auto uniform_location = GetUniformLoc(uniform_name);
-	if (uniform_location == -1)
-		return;
-	glUniform1f(uniform_location, float_);
+void Shader::SetFloat1(const float& float_, const std::string& uniform_name) {
+    auto uniform_location = GetUniformLoc(uniform_name);
+    if (uniform_location != -1) {
+        glUniform1f(uniform_location, float_);
+    }
 }
 
-GLint Shader::GetUniformLoc(const std::string& uniform_name)
-{
-	auto it = m_UniformCache.find(uniform_name);
-	if (it == m_UniformCache.end()) {
-		GLint loc = glGetUniformLocation(m_shader_program, uniform_name.c_str());
-		if (loc == -1) {
-			std::cout << "[SHADER][GetUniformLoc][ERROR] Could not find location for uniform '" + uniform_name + "'.\n";
-			return -1;
-		}
-		m_UniformCache[uniform_name] = loc;
-		return loc;
-	}
+GLint Shader::GetUniformLoc(const std::string& uniform_name) {
+    auto it = m_UniformCache.find(uniform_name);
+    if (it == m_UniformCache.end()) {
+        GLint loc = glGetUniformLocation(m_shader_program, uniform_name.c_str());
+        if (loc == -1) {
+            std::cout << "[Shader][GetUniformLoc][ERROR] Could not find location for uniform '" + uniform_name + "'.\n";
+            return -1;
+        }
+        m_UniformCache[uniform_name] = loc;
+        return loc;
+    }
 
-	return it->second;
+    return it->second;
 }
 
-GLuint Shader::CreateShader(std::string& path, GLuint shader_type)
-{
+GLuint Shader::CreateShader(std::string& path, GLuint shader_type) {
+    std::ifstream in(path);
+    if (in.fail()) {
+        std::cout << "[Shader][CreateShader][ERROR] Failed opening file: " + path << "\n";
+        return -1;
+    }
 
-	std::ifstream in(path);
-	if (in.fail()) {
-		std::cout << "[SHADER][CreateShader][ERROR] Failed opening file: " + path << std::endl;
-		return -1;
-	}
+    const std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    const char* shader_source = contents.c_str();
 
-	const std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	const char* shader_source = contents.c_str();
+    GLuint shader = glCreateShader(shader_type);
+    glShaderSource(shader, 1, &shader_source, NULL);
+    glCompileShader(shader);
 
-	GLuint shader;
-	shader = glCreateShader(shader_type);
-	glShaderSource(shader, 1, &shader_source, NULL);
-	glCompileShader(shader);
+    if (CheckForErrors(shader, GL_COMPILE_STATUS))
+        return -1;
 
-	GLuint err = CheckForErrors(shader, GL_COMPILE_STATUS);
-	if (err)
-		return -1;
-
-	return shader;
+    return shader;
 }
 
-GLuint Shader::CheckForErrors(GLuint shader, GLuint err_type)
-{
+GLuint Shader::CheckForErrors(GLuint shader, GLuint err_type) {
+    int success;
+    char info_log[512];
 
-	int success;
-	char info_log[512];
+    if (err_type == GL_LINK_STATUS) {
+        glGetProgramiv(shader, err_type, &success);
+        glGetProgramInfoLog(shader, 512, NULL, info_log);
+    }
+    else {
+        glGetShaderiv(shader, err_type, &success);
+        glGetShaderInfoLog(shader, 512, NULL, info_log);
+    }
 
-	if (err_type == GL_LINK_STATUS) {
-		glGetProgramiv(shader, err_type, &success);
-		glGetProgramInfoLog(shader, 512, NULL, info_log);
-	}
-	else {
-		glGetShaderiv(shader, err_type, &success);
-		glGetShaderInfoLog(shader, 512, NULL, info_log);
-	}
+    if (!success) {
+        switch (err_type) {
+        case GL_COMPILE_STATUS:
+            std::cout << "[Shader][CheckForErrors][ERROR] Failed compiling shader.\n" << info_log << "\n";
+            break;
+        case GL_LINK_STATUS:
+            std::cout << "[Shader][CheckForErrors][ERROR] Failed linking shader.\n" << info_log << "\n";
+            break;
+        default:
+            std::cout << "[Shader][CheckForErrors][ERROR] Unexpected error.\n" << "\n";
+            break;
+        }
+        return -1;
+    }
 
-	if (!success) {
-		switch (err_type) {
-		case GL_COMPILE_STATUS:
-			std::cout << "[Shader][CheckForErrors][ERROR] Failed compiling shaderprogram.\n" << info_log << std::endl;
-			break;
-		case GL_LINK_STATUS:
-			std::cout << "[Shader][CheckForErrors][ERROR] Failed linking shaderprogram.\n" << info_log << std::endl;
-			break;
-		default:
-			std::cout << "[Shader][CheckForErrors][ERROR] Whatever happened was not supposed to happen.\n" << std::endl;
-			break;
-		}
-		return -1;
-	}
-
-	return 0;
-
+    return 0;
 }

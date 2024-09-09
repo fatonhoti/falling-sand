@@ -12,6 +12,7 @@ static std::mt19937 rng(dev());
 #include "core/InputHandler.hpp"
 
 static auto hsv_to_rgb = [](const float h, const float s, const float v) {
+	// assumes varying hue, but s=v=1
 	float kr = std::fmodf(5.0f + h * 6.0f, 6.0f);
 	float kg = std::fmodf(3.0f + h * 6.0f, 6.0f);
 	float kb = std::fmodf(1.0f + h * 6.0f, 6.0f);
@@ -40,22 +41,23 @@ int FallingSand::Init()
 	this->grid.nof_cols = w / CELL_SIZE;
 	this->grid.nof_rows = h / CELL_SIZE;
 
-	this->grid.Init(w, h);
+	if (this->grid.Init(w, h))
+		return -1;
 
 	return 0;
 }
 
 int FallingSand::Tick(const double dt) {
 
-	if (InputHandler::KeyPressed(GLFW_KEY_ESCAPE))
+	if (InputHandler::IsKeyPressed(GLFW_KEY_ESCAPE))
 		return -1;
 
 	const double fps = 1.0 / dt;
 	const double dt_ms = dt * 1000.0;
 	glfwSetWindowTitle(this->window_handle, std::vformat("dt={:.2f} ms, fps={:.0f}", std::make_format_args(dt_ms, fps)).c_str());
 
-	if (InputHandler::ButtonPressed(GLFW_MOUSE_BUTTON_LEFT)) {
-		const glm::vec2 cursorPos = InputHandler::GetLatestCursorPosition();
+	if (InputHandler::IsButtonPressed(GLFW_MOUSE_BUTTON_LEFT)) {
+		const glm::vec2 cursorPos = InputHandler::GetCursorPosition();
 		const int col = static_cast<int>(std::floor(cursorPos.x / this->grid.cell_size));
 		const int row = static_cast<int>(std::floor(cursorPos.y / this->grid.cell_size));
 

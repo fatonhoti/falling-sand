@@ -12,7 +12,7 @@
 // src
 #include "AppInstance.hpp"
 
-// Impl from: https://stackoverflow.com/a/1008289/26041804
+// Singleton impl. from: https://stackoverflow.com/a/1008289/26041804
 class Application {
 
 public:
@@ -25,12 +25,11 @@ public:
 	void operator=(const Application&) = delete;
 
 	void Start();
-
-	[[nodiscard]] int Init(const int window_width, const int window_height, const std::string title);
 	void Destroy();
 
+	[[nodiscard]] int Init(const int window_width, const int window_height, const std::string title);
 	[[nodiscard]] int AttachAppInstance(const std::unique_ptr<AppInstance> ai);
-	std::optional<std::unique_ptr<AppInstance>> DetachAppInstance();
+	[[nodiscard]] std::optional<std::unique_ptr<AppInstance>> DetachAppInstance();
 
 private:
 	Application() {}; // Yes, leave it like this!

@@ -7,24 +7,33 @@
 class InputHandler
 {
 public:
-	[[nodiscard]] static void UpdateKeyInput(int key, int action);
-	[[nodiscard]] static int KeyPressed(int key);
-	[[nodiscard]] static int KeyReleased(int key);
+    // Update key input state
+    static void UpdateKeyInput(int key, int action);
 
-	[[nodiscard]] static void UpdateButtonInput(int button, int action);
-	[[nodiscard]] static int ButtonPressed(int button);
-	[[nodiscard]] static int ButtonReleased(int button);
+    // Check if a key is currently pressed or released
+    [[nodiscard]] static bool IsKeyPressed(int key);
+    [[nodiscard]] static bool IsKeyReleased(int key);
 
-	[[nodiscard]] static void UpdateLatestCursorPosition(double xpos, double ypos);
-	[[nodiscard]] static glm::vec2 GetLatestCursorPosition();
+    // Update button input state
+    static void UpdateButtonInput(int button, int action);
+
+    // Check if a mouse button is currently pressed or released
+    [[nodiscard]] static bool IsButtonPressed(int button);
+    [[nodiscard]] static bool IsButtonReleased(int button);
+
+    // Update the cursor position
+    static void UpdateCursorPosition(double xpos, double ypos);
+
+    // Get the latest cursor position
+    [[nodiscard]] static glm::vec2 GetCursorPosition();
 
 private:
-	static bool PressedKeys[348];
-	static bool ReleasedKeys[348];
+    static bool PressedKeys[GLFW_KEY_LAST + 1];
+    static bool ReleasedKeys[GLFW_KEY_LAST + 1];
 
-	static bool PressedButtons[8];
-	static bool ReleasedButtons[8];
+    static bool PressedButtons[GLFW_MOUSE_BUTTON_LAST + 1];
+    static bool ReleasedButtons[GLFW_MOUSE_BUTTON_LAST + 1];
 
-	static double LatestCursorXPOS;
-	static double LatestCursorYPOS;
+    static double CursorXPos;
+    static double CursorYPos;
 };
